@@ -669,6 +669,7 @@ class AcadDocumentBase(AcadDatabaseBase):
     import_complete_ = Column(BOOLEAN)
 
     title_block = relationship('TitleBlockEtc', uselist=False, back_populates='document')
+    rev_strip = relationship('RevStrip', back_populates='document')
 
 
 class TitleBlockEtc(Base):
@@ -708,6 +709,21 @@ class TitleBlockEtc(Base):
     nfc_dwg_ = Column(BOOLEAN, default=False)  # not for construction
 
     document = relationship('AcadDocumentBase', uselist=False, back_populates='title_block')
+
+
+class RevStrip(Base):
+    __tablename__ = 'rev_strips'
+    block_reference_handle_ = Column(TEXT, primary_key=True)
+    document_name = Column(TEXT, ForeignKey('acad_documents.name'))
+    rank_ = Column(INTEGER)
+    hash_1 = Column(TEXT)
+    hash_2 = Column(TEXT)
+    description = Column('DESCRIPTION', TEXT)
+    approv = Column('APPROV', TEXT)
+    date = Column('DATE', TEXT)
+    date_1 = Column('DATE1', TEXT)
+
+    document = relationship('AcadDocumentBase', back_populates='rev_strip')
 
 
 class AcadLayerBase(AcadObjectBase):

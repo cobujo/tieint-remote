@@ -1,12 +1,21 @@
 from dataclasses import dataclass, field
 from sql import session_scope, engine_named, safe_check_dot_db
 from sql.helpers import query_stmt, db_add_or_merge, ss_result_to_namedtuples
-from sql.models import AcadDocumentBase, DesignError, AcDbAttributeBase, TitleBlockEtc, AcDbBlockReferenceBase
+from sql.models import (
+    AcadDocumentBase,
+    DesignError,
+    AcDbAttributeBase,
+    TitleBlockEtc,
+    AcDbBlockReferenceBase,
+    RevStrip
+)
 from sqlalchemy.orm import ColumnProperty
 from settings import constants as cn
 from mylogger import logger
 from typing import Optional
-
+from operator import attrgetter
+from itertools import groupby
+import json
 
 def processing_error(category: str, friendly: str, verbose: str, fatal: bool, session):
     if fatal:
@@ -122,7 +131,7 @@ class PkgQuery(object):
             doc_list = []
             for attr in tblock_dwg_attrs:
                 # query for all attrs under the block returned given the title block required attr query
-                tblock_attrs = ss.query(AcDbAttributeBase).filter_by(block_reference_handle_=attr.block_reference_handle_).all()
+                tblock_attrs = ss.query(AcDbAttributeBase).filter_by(block_reference_handle_=attr.block_reference_handle_).group_by(AcDbAttributeBase.handle).all()
                 # get attr dictionary for all fields that match the TitleBlock table
                 # (should still work for other firms titleblock, but may not return as many values)
                 attr_dict = matching_records_attrs(rows=tblock_attrs, model=TitleBlockEtc, field_name='tag_string', content_field_name='text_string')
@@ -148,8 +157,37 @@ class PkgQuery(object):
             rev_strip_blocks_q = ss.query(AcDbBlockReferenceBase).filter(AcDbBlockReferenceBase.name.like(cn.REV_STRIP_NAME_SSOE)).group_by(AcDbBlockReferenceBase.handle)
             rev_strip_blocks = rev_strip_blocks_q.all()
             if not rev_strip_blocks:
-                friendly = 'No rev strips found'
+                friendly = 'no rev strips found'
                 verbose = f'{query_stmt(rev_strip_blocks_q)} returns 0 rows'
                 processing_error(category='rev strip error', friendly=friendly, verbose=verbose, fatal=True, session=ss)
                 return
 
+            # group rev strip blocks by document name, and order by y coordinate
+            # (not using coordinates table for this)
+            rev_strip_blocks.sort(key=lambda x: (x.document, x.insertion_point[1]))
+            rs_blocks_grouped = groupby(rev_strip_blocks, key=attrgetter('document'))
+
+            for doc, revs in rs_blocks_grouped:
+                # since we're ordering by y coord ascending, let's define a rank to easily identify and list what the rev order should be for each document
+                for rank, rev in enumerate(revs):
+                    rev_attrs_q = ss.query(AcDbAttributeBase).filter_by(block_reference_handle_=rev.handle).group_by(AcDbAttributeBase.handle).order_by(AcDbAttributeBase.handle)
+                    rev_attrs = rev_attrs_q.all()
+                    if not rev_attrs:
+                        friendly = 'revision strip has no attributes'
+                        verbose = f'{query_stmt(rev_attrs_q)} returns 0 rows'
+                        processing_error(category='rev strip error', friendly=friendly, verbose=verbose, fatal=False, session=ss)
+
+                    attr_dict = matching_records_attrs(rows=rev_attrs, model=RevStrip, field_name='tag_string', content_field_name='text_string')
+
+                    rs = RevStrip(**attr_dict)
+                    # due to tag_string not having a unique requirement in a block, and allowing invalid chars, need to manually get the rev numbers under '#'
+                    # ther are two '#' tags, the main one used will have the larger height
+                    hashes = [ra for ra in rev_attrs if ra.tag_string == '#']
+                    hashes.sort(key=attrgetter('height'), reverse=True)
+
+                    rs.hash_1 = hashes[0].text_string
+                    rs.hash_2 = hashes[1].text_string
+                    rs.rank_ = rank
+                    rs.block_reference_handle_ = rev.handle
+
+                    db_add_or_merge(instance=rs, session_scope=ss)

@@ -11,12 +11,12 @@ import re
 #         for r in res:
 #             texts.append(r.text_string)
 #
-#     new_texts = [make_mtext_readable(t) for t in texts]
+#     new_texts = [mtext_make_readable(t) for t in texts]
 #
 #     return [texts, new_texts]
 
 
-def make_mtext_readable(string: str, add_newlines=True) -> str:
+def mtext_make_readable(string: str, add_newlines=True) -> str:
     newline_sub = r'\n' if add_newlines else r' '
     patterns_and_subs = [
         (r'(\\p\w.+?;)', ''),  # ?? not sure if this is a style or whitespace, but structure roughly is: \pxx-#,l#;CONTENT IS HERE
@@ -31,3 +31,5 @@ def make_mtext_readable(string: str, add_newlines=True) -> str:
         string = re.sub(pattern, sub, string)
 
     return string
+
+
