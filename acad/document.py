@@ -180,7 +180,8 @@ class AcadDocument(AcadDatabase, AcadUtil):
         return self.obj.Export(FileName=file_name, Extension=extension, SelectionSet=selection_set)
 
     def get_variable(self, name):
-        return self.obj.GetVariable(Name=name)
+        # Name is the input in the docs, however it's throwing a type error
+        return self.obj.GetVariable(name)
 
     def import_(self, file_name, insertion_point, scale_factor):
         return self.obj.Import(FileName=file_name, InsertionPoint=insertion_point, ScaleFactor=scale_factor)

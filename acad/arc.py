@@ -72,3 +72,5 @@ class AcDbArc(AcadEntity, AcadUtil):
 
         if not self.coordinate_import_ok(attrs_with_errors=coord_import, required_attrs=reqd_coords):
             logger.error(f'coordinates did not import for handle: {self._handle_static}')
+
+        self.db_process_bounding_box_in_session_(session=session, space=space, obj_instance=instance)

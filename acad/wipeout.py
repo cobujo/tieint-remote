@@ -22,4 +22,6 @@ class AcDbWipeout(AcadRasterImage, AcadUtil):
 
         sql_dct = self._dict_from_shared(AcDbWipeoutBase, excludes=excludes)
 
-        self.db_add_in_session_(model=AcDbWipeoutBase, session=session, space=space, dct=sql_dct)
+        instance = self.db_add_in_session_(model=AcDbWipeoutBase, session=session, space=space, dct=sql_dct)
+
+        self.db_process_bounding_box_in_session_(session=session, space=space, obj_instance=instance)

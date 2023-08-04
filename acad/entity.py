@@ -1,6 +1,11 @@
 from dataclasses import dataclass
 from acad.object import AcadObject
 from acad.true_color import AcadAcCmColor
+from typing import Optional
+from sql.models import ObjectBoundingBox
+from acad import Spaces
+from mylogger import logger
+from sql.helpers import db_add_or_merge
 
 
 @dataclass
@@ -59,8 +64,9 @@ class AcadEntity(AcadObject):
     def copy(self):
         return self.obj.Copy()
 
-    def get_bounding_box(self, min_point, max_point):
-        return self.obj.GetBoundingBox(MinPoint=min_point, MaxPoint=max_point)
+    def get_bounding_box(self) -> tuple:
+        # UPDATE: documentation is incorrect; input args are required but don't have to be "real", method will return tuple for min and max point regardless of input
+        return self.obj.GetBoundingBox(MinPoint=None, MaxPoint=None)
 
     def highlight(self, highlight_flag):
         return self.obj.Highlight(HighlightFlag=highlight_flag)
@@ -91,3 +97,46 @@ class AcadEntity(AcadObject):
 
     def update(self):
         return self.obj.Update()
+
+    def db_process_bounding_box_in_session_(self, session, space: Optional[str] = None, obj_instance=None):
+        """
+        modeled after db_process[coordinates]_in_session_ methods under acad.object
+        note this in the entity class since AcadEntity has the GetBoundingBox method
+        :param session:
+            expecting to run within a session scope
+        :param space: str
+            paper or model
+        :param obj_instance:
+            the sql instance, for establishing the relationship
+        :return:
+        """
+        try:
+            bbox = self.get_bounding_box()
+        except AttributeError:
+            raise AttributeError(f'expecting {self.__class__.__name__} to be a child of AcadEntity, however does not have the GetBoundingBox method!')
+
+        # only getting x and y values (not expecting to ever have use for z)
+        min_point, max_point = bbox[0], bbox[1]
+        min_x, min_y = min_point[0], min_point[1]
+        max_x, max_y = max_point[0], max_point[1]
+
+        obb = ObjectBoundingBox(
+            document_name=self.document.name,
+            handle_id=self._handle_static,
+            class_name=self.__class__.__name__,
+            x_min=min_x,
+            x_max=max_x,
+            y_min=min_y,
+            y_max=max_y
+        )
+
+        if space in Spaces:
+            obb.space = space
+        else:
+            logger.warning(f'Expecting space to be one of: {Spaces}, instead received {space}')
+            logger.warning(f'expecting {self.__class__.__name__} to be a child of AcadEntity and exist in a space')
+
+        if obj_instance:
+            obb.object = obj_instance
+
+        db_add_or_merge(instance=obb, session_scope=session)

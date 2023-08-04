@@ -85,6 +85,21 @@ class ObjectBase(Base):
     }
 
 
+class ObjectBoundingBoxBase(Base):
+    """
+    modeled after ObjectBase
+    """
+    __tablename__ = 'objects_bounding_box_mapper'
+    id_ = Column(INTEGER, primary_key=True)
+    tablename_ = Column(TEXT)
+
+    bounding_box_ = relationship('ObjectBoundingBox', back_populates='object')
+    __mapper_args__ = {
+        'polymorphic_identity': __tablename__,
+        'polymorphic_on': tablename_
+    }
+
+
 class AcadObjectBase(ObjectBase):
     __abstract__ = True
     id_ = Column(INTEGER, ForeignKey('objects_mapper.id_'), primary_key=True)
@@ -95,7 +110,6 @@ class AcadObjectBase(ObjectBase):
     object_id = Column(INTEGER)
     object_name = Column(TEXT)
     owner_id = Column(INTEGER)
-    # TODO: Mild -> constant defined below does not permeate to the class, just the sql column name. Fix?
     space_ = Column(cn.SPACE_ATTR_NAME, TEXT)
 
     def __repr__(self):
@@ -784,7 +798,6 @@ class AcadDimRotated(AcadDimensionBase):
     __tablename__ = 'acad_dims_rotated'
 
 
-
 class ObjectCoordinates(Base):
     """
     Table to more efficiently keep record of object and coordinates of certain attributes (i.e. center for circle, nodes for lines, etc.)
@@ -807,6 +820,22 @@ class ObjectCoordinates(Base):
     index = Column(INTEGER, nullable=True)  # only used for objects with multiple sub-parts, i.e. MLeader
 
     object = relationship('ObjectBase', back_populates='coordinates_')
+
+
+class ObjectBoundingBox(Base):
+    __tablename__ = 'object_bounding_boxes'
+    id = Column(INTEGER, primary_key=True)
+    object_id = Column(INTEGER, ForeignKey('objects_bounding_box_mapper.id_'))
+    document_name = Column(TEXT)
+    handle_id = Column(TEXT)
+    class_name = Column(TEXT)
+    space = Column(TEXT)
+    x_min = Column(REAL)
+    x_max = Column(REAL)
+    y_min = Column(REAL)
+    y_max = Column(REAL)
+
+    object = relationship('ObjectBoundingBox', back_populates='bounding_box_')
 
 
 class AcadAttributeErrorsBase(Base):

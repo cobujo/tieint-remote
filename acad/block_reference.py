@@ -133,3 +133,5 @@ class AcDbBlockReference(AcadEntity, AcadUtil):
         dbp = self.get_dynamic_block_properties()
         if dbp:
             [d.db_process_in_session_(session=session, space=space) for d in dbp]
+
+        self.db_process_bounding_box_in_session_(session=session, space=space, obj_instance=instance)

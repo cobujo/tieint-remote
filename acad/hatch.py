@@ -134,6 +134,7 @@ class AcDbHatch(AcadEntity, AcadUtil):
     def db_process_in_session_(self, session, space=None, include=('color',)):
         # *** can not find anything in docs that gives coordinates for hatch object! ***
         # as of now we have no way to add this to the object coordinates table
+        kws = dict(model=AcDbHatchBase, session=session, space=space)
         if 'color' in include:
             colors = ['background_color', 'gradient_color1', 'gradient_color2']
             for color_str in colors:
@@ -143,8 +144,9 @@ class AcDbHatch(AcadEntity, AcadUtil):
                 except com_error as e:
                     logger.warning(f'unable to create AcCmColor obj from {color_str} and store in db, likely because required constant is not set')
 
-            self.db_add_in_session_(model=AcDbHatchBase, session=session, space=space)
-
         else:
             sql_dct = self._dict_from_shared_nocolors(AcDbHatchBase)
-            self.db_add_in_session_(model=AcDbHatchBase, session=session, space=space, dct=sql_dct)
+            kws['dct'] = sql_dct
+
+        instance = self.db_add_in_session_(**kws)
+        self.db_process_bounding_box_in_session_(session=session, space=space, obj_instance=instance)
