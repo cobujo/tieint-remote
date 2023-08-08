@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from acad.dim import AcadDimension
+import warnings
 
 
 @dataclass
@@ -102,11 +103,13 @@ class AcDbRotatedDimension(AcadDimension):
 
     @property
     def dim_constr_desc(self):
-        return self.obj.DimConstrDesc
+        # return self.obj.DimConstrDesc
+        return warnings.warn('dim_constr_desc throwing com_error: Exception occurred')
 
     @property
     def dim_constr_expression(self):
-        return self.obj.DimConstrExpression
+        # return self.obj.DimConstrExpression
+        return warnings.warn('dim_constr_expression throwing com_error: Exception occurred')
 
     @property
     def dim_constr_form(self):
@@ -114,7 +117,8 @@ class AcDbRotatedDimension(AcadDimension):
 
     @property
     def dim_constr_name(self):
-        return self.obj.DimConstrName
+        # return self.obj.DimConstrName
+        return warnings.warn('dim_constr_name throwing com_error: Exception occurred')
 
     @property
     def dim_constr_reference(self):
@@ -122,7 +126,8 @@ class AcDbRotatedDimension(AcadDimension):
 
     @property
     def dim_constr_value(self):
-        return self.obj.DimConstrValue
+        # return self.obj.DimConstrValue
+        return warnings.warn('dim_constr_value throws com_error: Exception occurred')
 
     @property
     def dimension_line_color(self):
@@ -263,3 +268,4 @@ class AcDbRotatedDimension(AcadDimension):
     @property
     def units_format(self):
         return self.obj.UnitsFormat
+

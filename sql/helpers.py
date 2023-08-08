@@ -34,6 +34,7 @@ def db_add_or_merge(instance, session_scope, return_action=False) -> Optional[st
     return
 
 
+
 def list_properties_from_class(cls) -> Optional[list]:
     """
     *** NOTE: by using vars, this is only getting properties from the class and nothing inherited (and we want it that way)!

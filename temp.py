@@ -1,98 +1,33 @@
-from dataclasses import dataclass, field
-from typing import Optional
-import re
+class Grandparent:
+    grandparent_attribute = "I'm from Grandparent class"
+
+    def spoketh(self, speak):
+        print('what did you say!')
 
 
-@dataclass
-class Wow:
-    number: int
-    triple: int = field(init=False)
+class Parent(Grandparent):
+    parent_attribute = "I'm from Parent class"
 
-    @property
-    def double(self):
-        return self.number * 2
-
-    def __post_init__(self):
-        self.triple = self.number * 3
-
-    def saymyname(self):
-        print(__name__)
+    def spoken(self, speak):
+        print(f'{speak} sounds too expensive')
 
 
-@dataclass
-class Other():
-    num: int
-    word: Optional[str] = None
+class Grandchild(Parent):
+    grandchild_attribute = "I'm from Grandchild class"
+
+    def said(self, speak):
+        print(f'{speak} sounds lame')
 
 
-@dataclass
-class Whee(Wow):
-    quad: int = field(init=False)
-    other_obj: Other = field(init=False)
-
-    def __post_init__(self):
-        self.quad = self.number * 4
-
-
-def one(x: Optional[int] = None) -> None:
-    print(f'one is {x}')
+def find_unique_attributes(obj):
+    cls = type(obj)
+    unique_attributes = set(cls.__dict__.keys())
+    for base in cls.__bases__:
+        unique_attributes -= set(base.__dict__.keys())
+    return unique_attributes
 
 
-def two(x: Optional[iter]) -> None:
-    print(f'two is {x}')
+grandchild = Grandchild()
+unique_attrs = find_unique_attributes(grandchild)
 
-
-def exc(num):
-    try:
-        num / 0
-    except Exception as e:
-        return e
-
-
-def kws(this, that, *args, **kwargs):
-    print(f'this is: {this}')
-    print(f'that is: {that}')
-    print(args)
-    print(kwargs)
-
-
-def err():
-    try:
-        3 / 0
-    except Exception as e:
-        return e
-
-
-def unformat_mtext(s, exclude_list=('P', 'S')):
-    """Returns string with removed format information
-
-    :param s: string with multitext
-    :param exclude_list: don't touch tags from this list. Default ('P', 'S') for
-                         newline and fractions
-
-    ::
-
-        >>> text = ur'{\\fGOST type A|b0|i0|c204|p34;TEST\\fGOST type A|b0|i0|c0|p34;123}'
-        >>> unformat_mtext(text)
-        u'TEST123'
-
-    """
-    s = re.sub(r'\{?\\[^%s][^;]+;' % ''.join(exclude_list), '', s)
-    s = re.sub(r'\}', '', s)
-    return s
-
-
-def mtext_to_string(s):
-    """
-    Returns string with removed format innformation as :func:`unformat_mtext` and
-    `\\P` (paragraphs) replaced with newlines
-
-    ::
-
-        >>> text = ur'{\\fGOST type A|b0|i0|c204|p34;TEST\\fGOST type A|b0|i0|c0|p34;123}\\Ptest321'
-        >>> mtext_to_string(text)
-        u'TEST123\\ntest321'
-
-    """
-
-    return unformat_mtext(s).replace(u'\\P', u'\n')
+print(unique_attrs)  # Should print {'grandchild_attribute'}

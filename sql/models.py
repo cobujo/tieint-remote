@@ -166,7 +166,8 @@ class AcDbBlockReferenceBase(AcadEntityBase):
     y_scale_factor = Column(REAL)
     z_effective_scale_factor = Column(REAL)
     z_scale_factor = Column(REAL)
-    block_attributes_ = relationship('AcDbAttributeBase', back_populates='block_reference_', primaryjoin='AcDbBlockReferenceBase.handle==AcDbAttributeBase.block_reference_handle_')
+    block_attributes_ = relationship('AcDbAttributeBase', back_populates='block_reference_',
+                                     primaryjoin='AcDbBlockReferenceBase.handle==AcDbAttributeBase.block_reference_handle_')
     dynamic_properties_ = relationship('AcadDynamicBlockReferencePropertyBase', back_populates='block_reference_')
 
     __mapper_args__ = {
@@ -176,7 +177,7 @@ class AcDbBlockReferenceBase(AcadEntityBase):
 
 class AcDbAttributeBase(AcadEntityBase):
     __tablename__ = 'acdb_attributes'
-    alignment = Column(INTEGER)  # docs show this as enum (text) but testing shows int?
+    alignment = Column(MyIntOrText())  # enum?
     backward = Column(BOOLEAN)
     constant = Column(BOOLEAN)
     field_length = Column(INTEGER)
@@ -200,8 +201,10 @@ class AcDbAttributeBase(AcadEntityBase):
     thickness = Column(REAL)
     upside_down = Column(BOOLEAN)
     # added from acdb object
-    block_reference_handle_ = Column(TEXT, ForeignKey('acdb_block_references.handle', onupdate='CASCADE', ondelete='CASCADE'))
-    block_reference_ = relationship('AcDbBlockReferenceBase', back_populates='block_attributes_', primaryjoin='AcDbAttributeBase.block_reference_handle_==AcDbBlockReferenceBase.handle')
+    block_reference_handle_ = Column(TEXT,
+                                     ForeignKey('acdb_block_references.handle', onupdate='CASCADE', ondelete='CASCADE'))
+    block_reference_ = relationship('AcDbBlockReferenceBase', back_populates='block_attributes_',
+                                    primaryjoin='AcDbAttributeBase.block_reference_handle_==AcDbBlockReferenceBase.handle')
 
     __mapper_args__ = {
         'polymorphic_identity': __tablename__,
@@ -210,7 +213,7 @@ class AcDbAttributeBase(AcadEntityBase):
 
 class AcDbAttributeDefinitionBase(AcadEntityBase):
     __tablename__ = 'acdb_attribute_definitions'
-    alignment = Column(INTEGER)  # docs show this as enum (text) but testing shows int?
+    alignment = Column(MyIntOrText())  # enum?
     backward = Column(BOOLEAN)
     constant = Column(BOOLEAN)
     field_length = Column(INTEGER)
@@ -218,7 +221,7 @@ class AcDbAttributeDefinitionBase(AcadEntityBase):
     insertion_point = Column(MyTuple())
     invisible = Column(BOOLEAN)
     lock_position = Column(BOOLEAN)
-    mode = Column(INTEGER)  # docs show this as enum (text) but testing shows int?
+    mode = Column(MyIntOrText())  # enum?
     m_text_attribute = Column(BOOLEAN)
     m_text_attribute_content = Column(TEXT)
     m_text_boundary_width = Column(REAL)
@@ -245,7 +248,9 @@ class AcDbAttributeDefinitionBase(AcadEntityBase):
 
 class AcadDynamicBlockReferencePropertyBase(Base):
     __tablename__ = 'acad_dynamic_block_ref_properties'
-    block_reference_handle_ = Column(TEXT, ForeignKey('acdb_block_references.handle', onupdate='CASCADE', ondelete='CASCADE'), primary_key=True)
+    block_reference_handle_ = Column(TEXT,
+                                     ForeignKey('acdb_block_references.handle', onupdate='CASCADE', ondelete='CASCADE'),
+                                     primary_key=True)
     block_reference_ = relationship('AcDbBlockReferenceBase', back_populates='dynamic_properties_')
     allowed_values = Column(MyTuple())
     description = Column(TEXT)
@@ -297,12 +302,15 @@ class AcDbHatchBase(AcadEntityBase):
     __tablename__ = 'acdb_hatches'
     area = Column(REAL)
     associative_hatch = Column(BOOLEAN)
-    background_color_id_ = Column(TEXT, ForeignKey('acad_true_colors.id_', onupdate='CASCADE', ondelete='CASCADE'), nullable=True)
+    background_color_id_ = Column(TEXT, ForeignKey('acad_true_colors.id_', onupdate='CASCADE', ondelete='CASCADE'),
+                                  nullable=True)
     elevation = Column(REAL)
     gradient_angle = Column(TEXT)  # type in docs is ACAD_ANGLE, no link to object properties
     gradient_centered = Column(BOOLEAN)
-    gradient_color1_id_ = Column(TEXT, ForeignKey('acad_true_colors.id_', onupdate='CASCADE', ondelete='CASCADE'), nullable=True)
-    gradient_color2_id_ = Column(TEXT, ForeignKey('acad_true_colors.id_', onupdate='CASCADE', ondelete='CASCADE'), nullable=True)
+    gradient_color1_id_ = Column(TEXT, ForeignKey('acad_true_colors.id_', onupdate='CASCADE', ondelete='CASCADE'),
+                                 nullable=True)
+    gradient_color2_id_ = Column(TEXT, ForeignKey('acad_true_colors.id_', onupdate='CASCADE', ondelete='CASCADE'),
+                                 nullable=True)
     gradient_name = Column(TEXT)
     hatch_object_type = Column(TEXT)
     hatch_style = Column(TEXT)
@@ -378,8 +386,8 @@ class AcDbMLeaderBase(AcadEntityBase):
     __tablename__ = 'acdb_mleaders'
     arrowhead_block = Column(TEXT)
     arrowhead_size = Column(REAL)
-    arrowhead_type = Column(INTEGER)  # enum text or int?
-    block_connection_type = Column(INTEGER)  # enum text or int?
+    arrowhead_type = Column(MyIntOrText())  # enum?
+    block_connection_type = Column(MyIntOrText())  # enum?
     block_scale = Column(REAL)
     content_block_name = Column(TEXT)
     content_block_type = Column(INTEGER)
@@ -388,14 +396,15 @@ class AcDbMLeaderBase(AcadEntityBase):
     dogleg_length = Column(REAL)
     landing_gap = Column(REAL)
     leader_count = Column(INTEGER)
-    leader_line_color_id_ = Column(TEXT, ForeignKey('acad_true_colors.id_', onupdate='CASCADE', ondelete='CASCADE'), nullable=True)
+    leader_line_color_id_ = Column(TEXT, ForeignKey('acad_true_colors.id_', onupdate='CASCADE', ondelete='CASCADE'),
+                                   nullable=True)
     leader_line_type = Column(TEXT)  # ACAD_LTYPE?
     leader_line_weight = Column(INTEGER)  # ACAD_LWEIGHT?
     leader_type = Column(INTEGER)
     # normal = Column(MyTuple())
     scale_factor = Column(REAL)
     style_name = Column(TEXT)
-    text_attachment_direction = Column(INTEGER)  # enum text or int?
+    text_attachment_direction = Column(MyIntOrText())  # enum?
     text_background_fill = Column(BOOLEAN)
     text_bottom_attachment_type = Column(INTEGER)
     text_direction = Column(INTEGER)
@@ -752,7 +761,8 @@ class AcadLayerBase(AcadObjectBase):
     name = Column(TEXT)
     plot_style_name = Column(TEXT)
     plottable = Column(BOOLEAN)
-    true_color_id_ = Column(TEXT, ForeignKey('acad_true_colors.id_', onupdate='CASCADE', ondelete='CASCADE'), nullable=True)
+    true_color_id_ = Column(TEXT, ForeignKey('acad_true_colors.id_', onupdate='CASCADE', ondelete='CASCADE'),
+                            nullable=True)
     used = Column(BOOLEAN)
     viewport_default = Column(BOOLEAN)
 
@@ -796,6 +806,74 @@ class AcadDimensionBase(AcadEntityBase):
 
 class AcadDimRotated(AcadDimensionBase):
     __tablename__ = 'acad_dims_rotated'
+    alt_round_distance = Column(REAL)
+    alt_sub_units_factor = Column(REAL)
+    alt_sub_units_suffix = Column(TEXT)
+    alt_suppress_leading_zeros = Column(BOOLEAN)
+    alt_suppress_trailing_zeros = Column(BOOLEAN)
+    alt_suppress_zero_feet = Column(BOOLEAN)
+    alt_suppress_zero_inches = Column(BOOLEAN)
+    alt_text_prefix = Column(TEXT)
+    alt_text_suffix = Column(TEXT)
+    alt_tolerance_precision = Column(MyIntOrText())  # enum?
+    alt_tolerance_suppress_leading_zeros = Column(BOOLEAN)
+    alt_tolerance_suppress_trailing_zeros = Column(BOOLEAN)
+    alt_tolerance_suppress_zero_feet = Column(BOOLEAN)
+    alt_tolerance_suppress_zero_inches = Column(BOOLEAN)
+    alt_units = Column(BOOLEAN)
+    alt_units_format = Column(MyIntOrText())
+    alt_units_precision = Column(MyIntOrText())
+    alt_units_scale = Column(REAL)
+    arrowhead1_block = Column(TEXT)
+    arrowhead1_type = Column(MyIntOrText())
+    arrowhead2_block = Column(TEXT)
+    arrowhead2_type = Column(MyIntOrText())
+    arrowhead_size = Column(REAL)
+    # dim_constr_desc = Column(TEXT) -> throws com_error
+    # dim_constr_expression = Column(TEXT) -> throws com_error
+    dim_constr_form = Column(BOOLEAN)
+    # dim_constr_name = Column(TEXT) -> throws com_error
+    dim_constr_reference = Column(BOOLEAN)
+    # dim_constr_value = Column(TEXT) -> throws com_error
+    dimension_line_color = Column(MyIntOrText())
+    dimension_line_extend = Column(REAL)
+    dimension_linetype = Column(TEXT)
+    dimension_line_weight = Column(MyIntOrText())
+    dim_line1_suppress = Column(BOOLEAN)
+    dim_line2_suppress = Column(BOOLEAN)
+    dim_line_inside = Column(BOOLEAN)
+    extension_line_color = Column(MyIntOrText())
+    extension_line_extend = Column(REAL)
+    extension_line_offset = Column(REAL)
+    extension_line_weight = Column(MyIntOrText())
+    ext_line1_linetype = Column(TEXT)
+    ext_line1_suppress = Column(BOOLEAN)
+    ext_line2_linetype = Column(TEXT)
+    ext_line2_suppress = Column(BOOLEAN)
+    ext_line_fixed_len = Column(REAL)
+    ext_line_fixed_len_suppress = Column(BOOLEAN)
+    fit = Column(MyIntOrText())
+    force_line_inside = Column(BOOLEAN)
+    fraction_format = Column(MyIntOrText())
+    horizontal_text_position = Column(MyIntOrText())
+    linear_scale_factor = Column(REAL)
+    measurement = Column(REAL)
+    primary_units_precision = Column(MyIntOrText())
+    round_distance = Column(REAL)
+    sub_units_factor = Column(REAL)
+    sub_units_suffix = Column(TEXT)
+    suppress_zero_feet = Column(BOOLEAN)
+    suppress_zero_inches = Column(BOOLEAN)
+    text_inside = Column(BOOLEAN)
+    text_inside_align = Column(BOOLEAN)
+    text_outside_align = Column(BOOLEAN)
+    tolerance_suppress_zero_feet = Column(BOOLEAN)
+    tolerance_suppress_zero_inches = Column(BOOLEAN)
+    units_format = Column(MyIntOrText())
+
+    __mapper_args__ = {
+        'polymorphic_identity': __tablename__,
+    }
 
 
 class ObjectCoordinates(Base):
@@ -816,7 +894,8 @@ class ObjectCoordinates(Base):
     x = Column(REAL)
     y = Column(REAL)
     z = Column(REAL, nullable=True)
-    order = Column(INTEGER, nullable=True)  # only used when entity has more than one coordinate for the same prop (i.e. polyline, leader)
+    order = Column(INTEGER,
+                   nullable=True)  # only used when entity has more than one coordinate for the same prop (i.e. polyline, leader)
     index = Column(INTEGER, nullable=True)  # only used for objects with multiple sub-parts, i.e. MLeader
 
     object = relationship('ObjectBase', back_populates='coordinates_')
