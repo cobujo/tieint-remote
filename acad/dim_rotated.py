@@ -269,3 +269,12 @@ class AcDbRotatedDimension(AcadDimension):
     def units_format(self):
         return self.obj.UnitsFormat
 
+    def get_dim_points_(self):
+        """
+        No native method for getting dim endpoints, using Lisp and reading output from command line
+        :return:
+        """
+        cmd = f'(c:GetDimPoints "{self.handle}")\n'
+        self.document.send_command(cmd)
+
+        self
